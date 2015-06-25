@@ -1,13 +1,13 @@
 var path = Npm.require('path');
 
-var doHTMLScanning = function (compileStep, htmlScanner) {
+var doHTMLScanning = function (compileStep) {
   // XXX the way we deal with encodings here is sloppy .. should get
   // religion on that
   var contents = compileStep.read().toString('utf8');
   try {
-    var results = htmlScanner.scan(contents, compileStep.inputPath);
+    var results = HtmlScanner.scan(contents, compileStep.inputPath);
   } catch (e) {
-    if (e instanceof htmlScanner.ParseError) {
+    if (e instanceof HtmlScanner.ParseError) {
       compileStep.error({
         message: e.message,
         sourcePath: compileStep.inputPath,
@@ -46,6 +46,6 @@ var doHTMLScanning = function (compileStep, htmlScanner) {
 Plugin.registerSourceHandler(
   "html", {isTemplate: true, archMatching: 'web'},
   function (compileStep) {
-    doHTMLScanning(compileStep, html_scanner);
+    doHTMLScanning(compileStep);
   }
 );
