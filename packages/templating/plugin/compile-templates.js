@@ -5,7 +5,9 @@ var doHTMLScanning = function (compileStep) {
   // religion on that
   var contents = compileStep.read().toString('utf8');
   try {
-    var results = HtmlScanner.scan(contents, compileStep.inputPath);
+    var results = HtmlScanner.scan(contents, compileStep.inputPath, {
+      templates: true
+    });
   } catch (e) {
     if (e instanceof HtmlScanner.ParseError) {
       compileStep.error({

@@ -12,7 +12,10 @@ HtmlScanner = {
 
   bodyAttributes : [],
 
-  scan: function (contents, source_name) {
+  scan: function (contents, source_name, options) {
+    // Only look for template tags if options.templates = true
+    options = options || {};
+
     var rest = contents;
     var index = 0;
 
@@ -38,9 +41,15 @@ HtmlScanner = {
       advance(rest.match(/^\s*/)[0].length);
 
       var match = rOpenTag.exec(rest);
-      if (! match)
-        throwParseError("Expected <template>, <head>, or <body> tag" +
-                        " in template file");
+      if (! match) {
+        if (options.templates) {
+          throwParseError("Expected <template>, <head>, or <body> tag" +
+            " in template file");
+        }
+        
+        throwParseError("Expected <head> or <body> tag" +
+          " in HTML file");
+      }
 
       var matchToken = match[1];
       var matchTokenTagName =  match[3];
@@ -101,10 +110,18 @@ HtmlScanner = {
       var tagContents = rest.slice(0, end.index);
       var contentsStartIndex = index;
 
+      var handleTagOptions = {
+        tag: tagName,
+        attribs: tagAttribs,
+        contents: tagContents,
+        throwParseError: throwParseError,
+        contentsStartIndex: contentsStartIndex,
+        tagStartIndex: tagStartIndex,
+        templates: options.templates
+      };
+
       // act on the tag
-      HtmlScanner._handleTag(results, tagName, tagAttribs, tagContents,
-                              throwParseError, contentsStartIndex,
-                              tagStartIndex);
+      HtmlScanner._handleTag(results, handleTagOptions);
 
       // advance afterwards, so that line numbers in errors are correct
       advance(end.index + end[0].length);
@@ -121,8 +138,14 @@ HtmlScanner = {
     return results;
   },
 
-  _handleTag: function (results, tag, attribs, contents, throwParseError,
-                        contentsStartIndex, tagStartIndex) {
+  _handleTag: function (results, options) {
+    // Unpack options
+    var tag = options.tag;
+    var attribs = options.attribs;
+    var contents = options.contents;
+    var throwParseError = options.throwParseError;
+    var contentsStartIndex = options.contentsStartIndex;
+    var tagStartIndex = options.tagStartIndex;
 
     // trim the tag contents.
     // this is a courtesy and is also relied on by some unit tests.
@@ -151,6 +174,10 @@ HtmlScanner = {
 
     try {
       if (tag === "template") {
+        if (! options.templates) {
+          throwParseError("Expected <head> or <body> tag in HTML file");
+        }
+
         var name = attribs.name;
         if (! name)
           throwParseError("Template has no 'name' attribute");
@@ -179,14 +206,19 @@ HtmlScanner = {
           results.js += "\nMeteor.startup(function() { $('body').attr(" + JSON.stringify(attribs) + "); });\n";
         }
 
-        var renderFuncCode = SpacebarsCompiler.compile(
-          contents, {
-            isBody: true,
-            sourceName: "<body>"
-          });
+        if (options.templates) {
+          var renderFuncCode = SpacebarsCompiler.compile(
+            contents, {
+              isBody: true,
+              sourceName: "<body>"
+            });
 
-        // We may be one of many `<body>` tags.
-        results.js += "\nTemplate.body.addContent(" + renderFuncCode + ");\nMeteor.startup(Template.body.renderToDocument);\n";
+          // We may be one of many `<body>` tags.
+          results.js += "\nTemplate.body.addContent(" + renderFuncCode + ");\nMeteor.startup(Template.body.renderToDocument);\n";
+        } else {
+          results.body += contents;
+        }
+        
       }
     } catch (e) {
       if (e.scanner) {
