@@ -263,29 +263,25 @@ var ResourceSlot = function (unibuildResourceInfo,
   self.sourceProcessor = sourceProcessor;
   self.packageSourceBatch = packageSourceBatch;
 
-  if (self.inputResource.type === "source" &&
-      self.inputResource.extension === "js") {
-    // #HardcodeJs
+  if (self.inputResource.type === "source") {
     if (sourceProcessor) {
-      throw Error("sourceProcessor found for js source? " +
-                  JSON.stringify(unibuildResourceInfo));
-    }
-    self.addJavaScript({
-      // XXX it's a shame to keep converting between Buffer and string, but
-      // files.convertToStandardLineEndings only works on strings for now
-      data: self.inputResource.data.toString('utf8'),
-      path: self.inputResource.path,
-      hash: self.inputResource.hash,
-      bare: self.inputResource.fileOptions &&
-        (self.inputResource.fileOptions.bare ||
-         // XXX eventually get rid of backward-compatibility "raw" name
-         // XXX COMPAT WITH 0.6.4
-         self.inputResource.fileOptions.raw)
-    });
-  } else if (self.inputResource.type === "source") {
-    if (! sourceProcessor) {
-      throw Error("no sourceProcessor for source? " +
-                  JSON.stringify(unibuildResourceInfo));
+      // If we have a sourceProcessor, it will handle the adding of the
+      // final processed JavaScript.
+    } else if (self.inputResource.extension === "js") {
+      // If there is no sourceProcessor for a .js file, add the source
+      // directly to the output. #HardcodeJs
+      self.addJavaScript({
+        // XXX it's a shame to keep converting between Buffer and string, but
+        // files.convertToStandardLineEndings only works on strings for now
+        data: self.inputResource.data.toString('utf8'),
+        path: self.inputResource.path,
+        hash: self.inputResource.hash,
+        bare: self.inputResource.fileOptions &&
+          (self.inputResource.fileOptions.bare ||
+           // XXX eventually get rid of backward-compatibility "raw" name
+           // XXX COMPAT WITH 0.6.4
+           self.inputResource.fileOptions.raw)
+      });
     }
   } else {
     if (sourceProcessor) {
