@@ -8,22 +8,29 @@ BCp.processFilesForTarget = function (inputFiles) {
     var inputFilePath = inputFile.getPathInPackage();
     var outputFilePath = inputFile.getPathInPackage();
     var fileOptions = inputFile.getFileOptions();
-
-    var result = Babel.transformMeteor(source, {
-      sourceMap: true,
-      filename: inputFilePath,
-      sourceFileName: "/" + inputFilePath,
-      sourceMapName: "/" + outputFilePath + ".map"
-    });
-
-    inputFile.addJavaScript({
+    var toBeAdded = {
       sourcePath: inputFilePath,
       path: outputFilePath,
-      data: result.code,
-      hash: result.hash,
-      sourceMap: result.map,
-      bare: !!fileOptions.bare
-    });
+      data: source,
+      hash: inputFile.getSourceHash(),
+      sourceMap: null,
+      bare: !! fileOptions.bare
+    };
+
+    if (fileOptions.transpile !== false) {
+      var result = Babel.transformMeteor(source, {
+        sourceMap: true,
+        filename: inputFilePath,
+        sourceFileName: "/" + inputFilePath,
+        sourceMapName: "/" + outputFilePath + ".map"
+      });
+
+      toBeAdded.data = result.code;
+      toBeAdded.hash = result.hash;
+      toBeAdded.sourceMap = result.map;
+    }
+
+    inputFile.addJavaScript(toBeAdded);
   });
 };
 
