@@ -480,6 +480,7 @@ var compileUnibuild = function (options) {
       resources.push({
         type: "source",
         extension: classification.extension,  // possibly null
+        hasSourceProcessors: _.has(classification, "sourceProcessors"),
         data: contents,
         path: relPath,
         hash: hash,
