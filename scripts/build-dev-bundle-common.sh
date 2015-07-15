@@ -18,6 +18,18 @@ if [ "$UNAME" == "Linux" ] ; then
     stripBinary() {
         strip --remove-section=.comment --remove-section=.note $1
     }
+elif [ "$UNAME" == "FreeBSD" ] ; then
+    if [ "$ARCH" != "i686" -a "$ARCH" != "amd64" ] ; then
+        echo "Unsupported architecture: $ARCH"
+        echo "Meteor only supports i686 and amd64 for now."
+        exit 1
+    fi
+
+    OS="FreeBSD"
+
+    stripBinary() {
+        strip --remove-section=.comment --remove-section=.note $1
+    }
 elif [ "$UNAME" == "Darwin" ] ; then
     SYSCTL_64BIT=$(sysctl -n hw.cpu64bit_capable 2>/dev/null || echo 0)
     if [ "$ARCH" == "i386" -a "1" != "$SYSCTL_64BIT" ] ; then

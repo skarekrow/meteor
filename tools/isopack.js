@@ -1129,7 +1129,7 @@ _.extend(Isopack.prototype, {
     builder = builder.enter(toolPath);
 
     // Transpile the files we selected
-    var babel = require("meteor-babel");
+    var babel = require("babel");
     pathsToTranspile.forEach((path) => {
       var fullPath = files.convertToOSPath(
         files.pathJoin(files.getCurrentToolsDir(), path));

@@ -47,5 +47,5 @@ sourceMapSupport.install({
 push(sourceMapSupport.retrieveSourceMap);
 
 /* eslint-disable max-len */
-push(require('meteor-babel/register').retrieveSourceMap); // #RemoveInProd this line is removed in isopack.js
+push(require('babel/register').retrieveSourceMap); // #RemoveInProd this line is removed in isopack.js
 /* eslint-enable max-len */
